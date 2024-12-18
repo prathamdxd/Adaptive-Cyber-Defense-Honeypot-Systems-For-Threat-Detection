@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Stock Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            background: linear-gradient(to bottom, #0e1b2b, #1a314a);
+            color: white;
+            margin: 0;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to right, #1f2f46, #2b3e5c);
+            padding: 0px 20px;
+        }
+
+        header h1 {
+            font-size: 24px;
+        }
+
+        header .search-bar {
+            display: flex;
+            align-items: center;
+        }
+
+        header input {
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        header img {
+            width: 24px;
+            height: 24px;
+            margin-left: 15px;
+        }
+
+        nav {
+            background: linear-gradient(to right, #1f2f46, #2b3e5c);
+            padding: 5px 20px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+        nav ul li {
+            margin-right: 40px;
+            cursor: pointer;
+        }
+
+        nav ul li a:hover {
+            color: #db4848;
+            transition: color 0.3s ease;
+
+        }
+
+        nav ul li i {
+            margin-right: 8px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            font-size: 16px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 100px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(to bottom, #16283c, #223b52);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .sidebar ul li span {
+            color: #4caf50;
+        }
+
+        .sidebar ul li button {
+            background: #4caf50;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .main {
+            flex-grow: 1;
+            background-color: #122233;
+            padding: 20px;
+            height: 450px;
+        }
+
+        .main h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .main .chart-container {
+            background: linear-gradient(to top, #1f2f46, #2b3e5c);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .recent {
+            background: linear-gradient(to right, #1f2f46, #2b3e5c);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .recent h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .recent ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recent ul li {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        #market-list {
+            font-size: 15px;
+        }
+
+        .buy-sell-section {
+            width: 300px;
+            background: linear-gradient(to bottom, #1f2f46, #2b3e5c);
+            padding: 6px 20px;
+            border-radius: 10px;
+            margin: 20px;
+            height: 450px;
+        }
+
+        .buy-sell-section h3 {
+            margin-bottom: 10px;
+        }
+
+        .buy-sell-section ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        .buy-sell-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .buy-sell-section input {
+            width: calc(100% - 10px);
+            padding: 5px;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .buy-sell-section button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2px;
+            background-color: rgb(30, 27, 35);
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        footer p {
+            margin: 5px;
+
+        }
+
+        button {
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            transition: background 0.3s ease;
+        }
+
+        #wish {
+            background: #1b87ca;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        i.fa-solid {
+            font-size: 15px;
+        }
+
+        .wallet-section {
+            margin-top: 20px;
+            background: linear-gradient(to bottom, #16283c, #223b52);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: small;
+        }
+
+        .wallet-section input {
+            margin-bottom: 10px;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .wallet-section button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .wallet-section button:hover {
+            background-color: #45a049;
+        }
+
+        .search-bar input:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: background 0.3s ease;
+            color: aliceblue;
+        }
+
+        .search-bar i {
+            position: absolute;
+            right: 190px;
+            pointer-events: none;
+            color: white;
+        }
+
+        .search-bar {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Login screen styling */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(to bottom, #0e1b2b, #1a314a);
+        }
+
+        #login-screen input {
+            margin: 10px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        #login-screen button {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #login-screen button:hover {
+            background-color: #45a049;
+        }
+
+        #website-content {
+            display: none;
+            /* Hide the main content initially */
+        }
+
+
+        /* Login screen styling */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(to bottom, #0e1b2b, #1a314a);
+        }
+
+        #login-screen input {
+            margin: 10px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        #login-screen button {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #login-screen button:hover {
+            background-color: #45a049;
+        }
+
+        #website-content {
+            display: none;
+            /* Hide the main content initially */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="login-screen">
+        <h1>Login</h1>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="checkLogin()">Login</button>
+    </div>
+
+    <div id="website-content">
+        <!-- Original website content starts here -->
+        <header>
+            <h1>GLOBAL Stock Dashboard</h1>
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-input" placeholder="Search stocks">
+            </div>
+        </header>
+        <hr>
+        <nav>
+            <ul>
+                <li>
+                    <i class="fa-solid fa-house"></i>
+                    <a href="#">Home</a>
+                </li>
+                <li>
+                    <i class="fa-solid fa-chart-line"></i>
+                    <a href="#">Markets</a>
+                </li>
+                <li>
+                    <i class="fa-solid fa-bookmark"></i>
+                    <a href="#">Watchlist</a>
+                </li>
+                <li>
+                    <i class="fa-solid fa-user"></i>
+                    <a href="#">Profile</a>
+                </li>
+            </ul>
+        </nav>
+        <div class="container">
+            <div class="sidebar">
+                <h2>Global Market</h2>
+                <ul id="market-list"></ul>
+            </div>
+            <div class="main">
+                <h2 id="main-stock-title"></h2>
+                <div class="btn">
+                    <button id="wish">
+                        <i class="fa-solid fa-bookmark"></i> + Watchlist
+                    </button>
+                    <button>
+                        <i class="fa-solid fa-share-nodes"></i> Share
+                    </button>
+                    <button>
+                        <i class="fa-solid fa-chart-simple"></i> Compare
+                    </button>
+                    <button>
+                        <i class="fa-solid fa-user-plus"></i> Join The Community
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="stockChart" width="500" height="200"></canvas>
+                </div>
+                <div class="recent">
+                    <h3>Recent Stock Movement</h3>
+                    <ul id="recent-list"></ul>
+                </div>
+            </div>
+            <div class="buy-sell-section">
+                <h3>Buy/Sell Stocks</h3>
+                <ul id="owned-stocks">
+                    <li>No stocks owned yet</li>
+                </ul>
+                <input type="text" placeholder="Stock name" id="stock-name">
+                <input type="number" placeholder="Quantity" id="stock-quantity">
+                <button onclick="buyStock()">Buy</button>
+                <button onclick="sellStock()">Sell</button>
+
+                <hr>
+
+                <!-- Wallet Section for Bitcoin -->
+                <div class="wallet-section">
+                    <h3>Bitcoin Wallet</h3>
+                    <p>Current Bitcoin Holdings: <span id="bitcoin-balance">0</span> BTC</p>
+                    <input type="number" placeholder="Amount to Trade (in BTC)" id="trade-amount">
+                    <button onclick="tradeBitcoin()">Trade Bitcoin</button>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <p>&copy; 2024 GLOBAL Dashboard</p>
+        </footer>
+    </div>
+
+    <script>
+        const USERNAME = "username";
+        const PASSWORD = "password";
+        function checkLogin() {
+            const enteredUsername = document.getElementById('username').value;
+            const enteredPassword = document.getElementById('password').value;
+
+            if (enteredUsername === USERNAME && enteredPassword === PASSWORD) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('website-content').style.display = 'block';
+            } else {
+                alert("Invalid username or password.");
+            }
+        }
+        let bitcoinBalance = 0; // Track Bitcoin balance globally
+
+        function tradeBitcoin() {
+            const tradeAmountInput = document.getElementById('trade-amount');
+            const amountToTrade = parseFloat(tradeAmountInput.value);
+
+            if (!amountToTrade || amountToTrade <= 0) {
+                alert("Please enter a valid amount to trade.");
+                return;
+            }
+
+            bitcoinBalance += amountToTrade; // Simulate the transaction by adding the value
+            updateBitcoinDisplay();
+            alert(`Successfully traded ${amountToTrade} BTC`);
+        }
+
+        function updateBitcoinDisplay() {
+            document.getElementById('bitcoin-balance').innerText = bitcoinBalance.toFixed(4);
+        }
+
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        const data = {
+            labels: ["9:30 am", "10:00 am", "10:30 am", "11:00 am", "12:00 pm", "1:00 pm", "2:00 pm", "3:30 pm"],
+            datasets: [{
+                label: 'Stock Price',
+                data: [24600, 24650, 24620, 24680, 24640, 24580, 24550, 24619],
+                borderColor: 'lightgreen',
+                backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                fill: true,
+                tension: 0.4,
+            }]
+        };
+
+        const options = {
+            scales: {
+                x: {
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        color: 'white',
+                    }
+                },
+                y: {
+                    grid: {
+                        color: '#2b3e5c',
+                    },
+                    ticks: {
+                        color: 'white',
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                }
+            }
+        };
+
+        const stockChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: options
+        });
+
+        const ownedStocks = [];
+        const API_KEY = 'ctbueo9r01qvslqvdvg0ctbueo9r01qvslqvdvgg'; // Replace with your real Finnhub API Key.
+
+        const fetchStockData = async (symbol) => {
+            try {
+                const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`);
+                const data = await response.json();
+                if (!data || !data.c) {
+                    throw new Error('Unable to fetch stock data');
+                }
+                return data;
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+                return null;
+            }
+        };
+
+        async function updateChart(stockData, symbol) {
+            const labels = ['Latest Price'];
+            const prices = [stockData.c];
+
+            if (stockChart) {
+                stockChart.destroy();
+            }
+
+            stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: `${symbol} Stock Price`,
+                        data: prices,
+                        borderColor: 'blue',
+                        backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'white' }
+                        },
+                        y: {
+                            grid: { color: '#2b3e5c' },
+                            ticks: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function refreshStockDashboard() {
+            const stockList = ['AAPL', 'MSFT', 'TSLA', 'AMZN', 'NFLX']; // Sample symbols
+            const marketList = document.getElementById('market-list');
+            marketList.innerHTML = '';
+
+            for (const symbol of stockList) {
+                const data = await fetchStockData(symbol);
+
+                if (!data) continue;
+
+                const li = document.createElement('li');
+                li.innerHTML = `${symbol}: $${data.c} <span>${data.d}%</span> <button onclick="selectMainStock('${symbol}')" style="width:30px;margin-left:10px;">+</button>`;
+                marketList.appendChild(li);
+            }
+        }
+
+        async function selectMainStock(stockSymbol) {
+            const data = await fetchStockData(stockSymbol);
+
+            if (!data) {
+                alert('Failed to fetch data for this stock');
+                return;
+            }
+
+            document.getElementById('main-stock-title').innerText = `${stockSymbol} - $${data.c}`;
+            updateChart(data, stockSymbol);
+            const recentList = document.getElementById('recent-list');
+            recentList.innerHTML = `<li>${stockSymbol}: $${data.c}</li>`;
+        }
+
+        function buyStock() {
+            const name = document.getElementById('stock-name').value;
+            const quantity = parseInt(document.getElementById('stock-quantity').value, 10);
+
+            if (!name || !quantity) {
+                alert('Invalid stock details');
+                return;
+            }
+
+            ownedStocks.push({ name, quantity });
+            updateOwnedStocks();
+        }
+
+        function sellStock() {
+            const name = document.getElementById('stock-name').value;
+            const quantity = parseInt(document.getElementById('stock-quantity').value, 10);
+            const stock = ownedStocks.find(s => s.name === name);
+
+            if (!stock || stock.quantity < quantity) {
+                alert('Invalid or insufficient stock');
+                return;
+            }
+
+            stock.quantity -= quantity;
+            if (stock.quantity === 0) {
+                ownedStocks.splice(ownedStocks.indexOf(stock), 1);
+            }
+            updateOwnedStocks();
+        }
+
+        function updateOwnedStocks() {
+            const stockList = document.getElementById('owned-stocks');
+            stockList.innerHTML = '';
+            if (ownedStocks.length === 0) {
+                stockList.innerHTML = '<li>No stocks owned yet</li>';
+                return;
+            }
+
+            ownedStocks.forEach(stock => {
+                const li = document.createElement('li');
+                li.innerText = `${stock.name} - ${stock.quantity} units`;
+                stockList.appendChild(li);
+            });
+        }
+
+        refreshStockDashboard();
+        setInterval(refreshStockDashboard, 5000);
+        async function logAction(actionType, details = '') {
+            const response = await fetch('/log-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action_type: actionType, details }),
+            });
+
+            const result = await response.json();
+            if (!result.status) {
+                console.error('Failed to log action');
+            }
+        }
+
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function () {
+                logAction('button_click', this.innerText.trim());
+            });
+        });
+        function tradeBitcoin() {
+            const amountToTrade = parseFloat(document.getElementById('trade-amount').value);
+            if (!amountToTrade || amountToTrade <= 0) {
+                alert("Invalid amount");
+                return;
+            }
+
+            logAction('trade_bitcoin', `Traded amount: ${amountToTrade}`);
+            alert('Bitcoin trade logged.');
+        }
+
+        function buyStock() {
+            const name = document.getElementById('stock-name').value;
+            const quantity = parseInt(document.getElementById('stock-quantity').value, 10);
+
+            if (!name || !quantity) {
+                alert('Invalid stock details');
+                return;
+            }
+
+            logAction('buy_stock', `Stock Name: ${name}, Quantity: ${quantity}`);
+            alert('Stock purchase logged.');
+        }
+
+        function sellStock() {
+            const name = document.getElementById('stock-name').value;
+            const quantity = parseInt(document.getElementById('stock-quantity').value, 10);
+
+            if (!name || !quantity) {
+                alert('Invalid stock details');
+                return;
+            }
+
+            logAction('sell_stock', `Stock Name: ${name}, Quantity: ${quantity}`);
+            alert('Stock selling logged.');
+        }
+        function checkLogin() {
+            const enteredUsername = document.getElementById('username').value;
+            const enteredPassword = document.getElementById('password').value;
+
+            if (enteredUsername === USERNAME && enteredPassword === PASSWORD) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('website-content').style.display = 'block';
+            } else {
+                alert("Invalid username or password.");
+            }
+        }
+        async function logAction(actionType, details = '') {
+            await fetch('/log-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action_type: actionType, details }),
+            });
+        }
+
+        // Attach event listeners to log button clicks and inputs
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function () {
+                logAction('Button Click', this.innerText.trim());
+            });
+        });
+
+        // Monitor textarea inputs in buy/sell and Bitcoin sections
+        document.getElementById('stock-name').addEventListener('input', function () {
+            logAction('Input Change', `Buy/Sell Stock Name: ${this.value}`);
+        });
+
+        document.getElementById('stock-quantity').addEventListener('input', function () {
+            logAction('Input Change', `Buy/Sell Quantity: ${this.value}`);
+        });
+
+        document.getElementById('trade-amount').addEventListener('input', function () {
+            logAction('Input Change', `Bitcoin Trade Amount: ${this.value}`);
+        });
+    </script>
+</body>
+
+</html>
